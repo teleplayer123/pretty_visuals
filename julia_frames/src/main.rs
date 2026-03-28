@@ -4,29 +4,29 @@ use rayon::prelude::*;
 use noise::{NoiseFn, Perlin};
 use std::fs;
 
-// ffmpeg -framerate 60 -i shimmer_out/frame_%03d.png -c:v libx264 -crf 18 -pix_fmt yuv420p shimmer.mp4
+// ffmpeg -framerate 60 -i frames/frame_%03d.png -c:v libx264 -crf 18 -pix_fmt yuv420p output.mp4
 
 fn main() {
     let (width, height) = (800, 800);
     let total_frames = 600;
-    let output_dir = "shimmer_out";
+    let output_dir = "frames";
     fs::create_dir_all(output_dir).unwrap();
 
     let perlin = Perlin::new(1);
     let mut feedback_buffer: Vec<f32> = vec![0.0; (width * height * 3) as usize];
 
-    println!("Generating shimmering Julia Set...");
+    println!("Generating Julia Set...");
 
     for frame in 0..total_frames {
-        // 1. Calculate Shimmer Factor
-        // We use Perlin noise to get a smooth, organic "pulse"
+        // Calculate Shimmer Factor
+        // use Perlin noise to get a smooth, organic "pulse"
         let noise_val = perlin.get([frame as f64 * 0.1, 0.0, 0.0]); 
         let shimmer = (noise_val * 0.5 + 0.5) as f32; // Map to 0.0 - 1.0
 
         let angle = frame as f64 * 0.04;
         let c = Complex::new(0.355 + 0.1 * angle.cos(), 0.355 + 0.1 * angle.sin());
 
-        // 2. Render Frame
+        // Render Frame
         let raw_pixels: Vec<u8> = (0..height).into_par_iter().flat_map(|y| {
             (0..width).into_par_iter().flat_map(move |x| {
                 let z = Complex::new(
@@ -39,7 +39,7 @@ fn main() {
             })
         }).collect();
 
-        // 3. Temporal Blur & Bloom (Same as before)
+        // Temporal Blur & Bloom 
         let mut final_img = RgbImage::new(width, height);
         for i in 0..feedback_buffer.len() {
             // Shimmer also affects trail persistence (lower shimmer = shorter trails)

@@ -1,5 +1,5 @@
 [package]
-name = "julia_set"
+name = "mandelbrot_frames"
 version = "0.1.0"
 edition = "2024"
 
@@ -7,5 +7,3 @@ edition = "2024"
 image = "0.24"
 num-complex = "0.4"
 rayon = "1.7"
-fastblur = "0.1"
-noise = "0.8"

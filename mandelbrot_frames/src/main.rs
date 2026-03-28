@@ -3,7 +3,7 @@ use num_complex::Complex;
 use rayon::prelude::*;
 use std::fs;
 
-// ffmpeg -framerate 30 -i frames/frame_%03d.png -c:v libx264 -pix_fmt yuv420p psychedelic_zoom.mp4
+// ffmpeg -framerate 30 -i frames/frame_%03d.png -c:v libx264 -pix_fmt yuv420p mandelbrot.mp4
 
 fn main() {
     let width = 800;
@@ -12,12 +12,12 @@ fn main() {
     let output_dir = "frames";
     fs::create_dir_all(output_dir).unwrap();
 
-    // The "Target" coordinates (a visually interesting area)
+    // Target coordinates
     let target_x = -0.743643887037158;
     let target_y = 0.131825904205311;
     let mut zoom = 1.0;
 
-    println!("Generating {} psychedelic frames...", total_frames);
+    println!("Generating {} mandelbrot frames...", total_frames);
 
     for frame in 0..total_frames {
         let mut img = RgbImage::new(width, height);
