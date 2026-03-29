@@ -22,31 +22,38 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let res = ui.screen_size;
-    // 1. Center the coordinates perfectly
     var uv = (in.clip_position.xy - 0.5 * res) / min(res.y, res.x);
     
-    // 2. Apply the zoom
+    // Apply the breathing zoom from Rust
     uv = uv / ui.zoom;
 
-    // 3. The "Infinite Spiral" Coordinate
-    // This specific point is deep inside a spiral arm that never ends.
-    let target_coord = vec2<f32>(-0.743643887037151, 0.131825904205330);
-    var z = uv + target_coord;
+    // THE KALEIDOSCOPE FOLD
+    // This bounces the coordinates around the center, ensuring that even 
+    // if the fractal tries to move away, it is mirrored back into view.
+    uv = abs(uv);
+    if (uv.x < uv.y) { uv = uv.yx; }
 
-    // 4. Julia Constant 'c'
-    // We keep this NEAR the Mandelbrot boundary for maximum complexity.
-    let c = vec2<f32>(-0.8, 0.156) + vec2<f32>(cos(ui.time * 0.1), sin(ui.time * 0.1)) * 0.001;
+    var z = uv;
+    
+    // THE MORPHING CONSTANT
+    // Lower the 'morph_speed' variable to slow down the writhing tentacles.
+    // E.g., 0.05 is very slow and dreamy. 0.5 is fast and chaotic.
+    let morph_speed = 0.05; 
+    
+    let c = vec2<f32>(
+        -0.4 + 0.05 * cos(ui.time * morph_speed), 
+         0.6 + 0.05 * sin(ui.time * (morph_speed * 1.33)) // slightly offset for organic movement
+    );
     
     var iter: f32 = 0.0;
-    let max_iter: f32 = 500.0; // High iterations for deep zoom clarity
+    let max_iter: f32 = 150.0; 
     
-    for (var j = 0; j < 500; j++) {
-        // Complex math: z = z^2 + c
+    for (var j = 0; j < 150; j++) {
         z = vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
-        
         let mag_sq = dot(z, z);
-        if (mag_sq > 100.0) {
-            // Smooth coloring formula
+        
+        if (mag_sq > 25.0) {
+            // Smooth fractional escape for liquid gradients
             let log_zn = log(mag_sq) / 2.0;
             let nu = log(log_zn / log(2.0)) / log(2.0);
             iter = iter + 1.0 - nu;
@@ -55,14 +62,17 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         iter = iter + 1.0;
     }
 
-    if (iter >= max_iter) { return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
+    // Instead of rendering the interior as pure black, we give it a deep, glowing purple
+    // so there are no "dead" pixels on the screen.
+    if (iter >= max_iter) { return vec4<f32>(0.05, 0.0, 0.1, 1.0); }
 
-    // 5. High-Frequency Psychedelic Colors
-    // We multiply 'iter' to make the colors "zip" past as we zoom.
-    let t = iter * 0.1 + ui.time * 0.5;
+    // Slow down the color "current" to match the slow zoom
+    let color_speed = 0.5; 
+    let t = iter * 0.1 - ui.time * color_speed; 
+    
     let r = 0.5 + 0.5 * sin(t * 1.0);
-    let g = 0.5 + 0.5 * sin(t * 1.3 + 2.0);
-    let b = 0.5 + 0.5 * sin(t * 1.7 + 4.0);
+    let g = 0.5 + 0.5 * sin(t * 1.2 + 2.0);
+    let b = 0.5 + 0.5 * sin(t * 1.4 + 4.0);
 
     return vec4<f32>(r, g, b, 1.0);
 }

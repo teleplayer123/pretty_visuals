@@ -112,12 +112,19 @@ async fn run() {
             let elapsed = start_time.elapsed().as_secs_f32();
             uniforms.time = elapsed;
 
-            // The "Trip" settings:
-            // Zoom doubles every 2.0 seconds. 
-            // We reset after 2^18 zoom to avoid floating point 'jitter'.
-            let zoom_cycle = (elapsed * 0.5) % 18.0; 
-            let max_zoom = 1024.0; // Set a reasonable maximum zoom level
-            uniforms.zoom = f32::min(f32::powf(2.0, zoom_cycle), max_zoom);
+            // --- THE SLOW ZOOM FIX ---
+            // 1. Lower the 0.4 to 0.1 to make the "breath" cycle 4x slower.
+            // 2. A full zoom cycle (in and out) will now take about 60 seconds.
+            let zoom_cycle_speed = 0.1; 
+            let sine_wave = f32::sin(elapsed * zoom_cycle_speed); 
+
+            // 3. Adjust the intensity. 
+            // Changing 10.0 to 5.0 makes the maximum zoom depth shallower, 
+            // which feels "closer" and less dizzying.
+            let zoom_depth = 5.0; 
+            let zoom_mapped = sine_wave * 0.5 + 0.5; 
+
+            uniforms.zoom = 0.8 * f32::powf(zoom_depth, zoom_mapped); 
 
             queue.write_buffer(&uniform_buffer, 0, bytemuck::bytes_of(&uniforms));
 
